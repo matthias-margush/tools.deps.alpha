@@ -2,6 +2,7 @@
   (:require
     [clojure.test :refer :all]
     [clojure.tools.deps.alpha :as deps]
+    [clojure.tools.deps.alpha.extensions :as ext]
     [clojure.tools.deps.alpha.extensions.faken :as fkn]))
 
 (deftest merge-alias-maps
@@ -134,3 +135,11 @@
     (is (= {:a "1", :b "1", :c "2"}
            (let [res (deps/resolve-deps {:deps {'ex/a {:fkn/version "1"}}} nil)]
              (reduce-kv #(assoc %1 (-> %2 name keyword) (:fkn/version %3)) {} res))))))
+
+(deftest test-local-root
+  (testing "a relative local root canonicalizes relative to parent dep"
+    (is (= ['ex/b {:local/root "a/b"}]
+           (ext/canonicalize 'ex/b {:local/root "b"} {:parent ['ex/a {:deps/root "a"}]}))))
+  (testing "an absolute local root canonicalizes to itself"
+    (is (= ['ex/b {:local/root "/b"}]
+           (ext/canonicalize 'ex/b {:local/root "/b"} {:parent ['ex/a {:deps/root "a"}]})))))
