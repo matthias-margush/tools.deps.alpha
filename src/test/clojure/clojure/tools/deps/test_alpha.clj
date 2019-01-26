@@ -2,6 +2,7 @@
   (:require
     [clojure.test :refer :all]
     [clojure.tools.deps.alpha :as deps]
+    [clojure.tools.deps.alpha.extensions :as ext]
     [clojure.tools.deps.alpha.extensions.faken :as fkn]))
 
 (deftest merge-alias-maps
@@ -134,3 +135,13 @@
     (is (= {:a "1", :b "1", :c "2"}
            (let [res (deps/resolve-deps {:deps {'ex/a {:fkn/version "1"}}} nil)]
              (reduce-kv #(assoc %1 (-> %2 name keyword) (:fkn/version %3)) {} res))))))
+
+(deftest test-paths-transitive-deps
+  (is (= {'ex/a
+          {:local/root "a",
+           :deps/manifest :deps,
+           :deps/root "a",
+           :paths []}}
+         (deps/resolve-deps {:paths ["src"]
+                             :deps {'ex/a {:local/root "a" :deps/manifest :deps}}}
+                            {:default-paths []}))))

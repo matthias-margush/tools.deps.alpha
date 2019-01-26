@@ -26,6 +26,7 @@
   {:extra-deps merge
    :override-deps merge
    :default-deps merge
+   :default-paths (comp vec distinct concat)
    :classpath-overrides merge
    :extra-paths (comp vec distinct concat)
    :jvm-opts (comp vec concat)
@@ -203,7 +204,7 @@
         version-map))))
 
 (defn- lib-paths
-  [version-map config]
+  [version-map default-paths config]
   (reduce
     (fn [ret [lib {:keys [select versions paths]}]]
       (let [coord (get versions select)
@@ -211,7 +212,7 @@
             src-paths (ext/coord-paths lib coord (:deps/manifest coord) config)]
         (assoc ret
           lib
-          (cond-> (assoc coord :paths src-paths)
+          (cond-> (assoc coord :paths (or src-paths default-paths))
             (seq paths) (assoc :dependents paths)))))
     {} version-map))
 
@@ -226,7 +227,7 @@
 
   Returns a lib map (map of lib to coordinate chosen)."
   [{:keys [deps] :as deps-map} args-map]
-  (let [{:keys [extra-deps default-deps override-deps verbose]} args-map
+  (let [{:keys [extra-deps default-deps override-deps default-paths verbose]} args-map
         deps (merge (:deps deps-map) extra-deps)]
     (when verbose
       (println "Initial deps to expand:")
@@ -234,7 +235,7 @@
     (-> deps
       (canonicalize-deps deps-map)
       (expand-deps default-deps override-deps deps-map verbose)
-      (lib-paths deps-map))))
+      (lib-paths default-paths deps-map))))
 
 (defn- make-tree
   [lib-map]

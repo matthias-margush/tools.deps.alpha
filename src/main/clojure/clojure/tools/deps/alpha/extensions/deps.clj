@@ -14,14 +14,14 @@
 
 (defn- deps-map
   [config dir]
-  (let [f (jio/file dir "deps.edn")]
-    (if (.exists f)
-      (reader/merge-deps [config (reader/slurp-deps f)])
-      config)))
+  (let [default-paths {:paths (:default-paths config)}]
+    (let [f (jio/file dir "deps.edn")]
+      (when (.exists f)
+        (reader/slurp-deps f)))))
 
 (defmethod ext/coord-deps :deps
   [_lib {:keys [deps/root] :as coord} _mf config]
-  (seq (:deps (deps-map config root))))
+  (seq (:deps (reader/merge-deps [config (deps-map config root)]))))
 
 (defmethod ext/coord-paths :deps
   [_lib {:keys [deps/root] :as coord} _mf config]
