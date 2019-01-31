@@ -186,7 +186,8 @@
           (let [use-path (conj parents lib)
                 {manifest-type :deps/manifest :as manifest-info} (ext/manifest-type lib use-coord config)
                 use-coord (merge use-coord manifest-info)
-                children (canonicalize-deps (ext/coord-deps lib use-coord manifest-type config) config)
+                children (canonicalize-deps (ext/coord-deps lib use-coord manifest-type config)
+                                            (assoc config :parent [use-path use-coord]))
                 child-paths (map #(conj use-path %) children)
                 vmap' (add-coord version-map lib coord-id use-coord parents action config verbose)]
             (if vmap'
